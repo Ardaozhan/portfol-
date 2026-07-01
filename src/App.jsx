@@ -19,40 +19,45 @@
  * │      </main>                                                      │
  * └──────────────────────────────────────────────────────────────────┘
  */
-import { Suspense, useEffect, useRef, lazy } from 'react';
-import { AnimatePresence } from 'framer-motion';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect, lazy, Suspense } from "react";
+import { AnimatePresence } from "framer-motion";
+import { Routes, Route, useLocation } from "react-router-dom";
 // Store
-import useAppStore from './store/useAppStore';
+import useAppStore from "./store/useAppStore";
 
 // Hooks
-import useLenis from './hooks/useLenis';
-import useGsapScroll from './hooks/useGsapScroll';
+import useLenis from "./hooks/useLenis";
+import useGsapScroll from "./hooks/useGsapScroll";
 
-import BackgroundCanvas from './components/ui/BackgroundCanvas';
-import Navbar from './components/ui/Navbar';
-import CustomCursor from './components/ui/CustomCursor';
-import BackToTop from './components/ui/BackToTop';
-import Layout from './components/Layout';
-import SystemLog from './components/ui/SystemLog';
+import BackgroundCanvas from "./components/ui/BackgroundCanvas";
+import Navbar from "./components/ui/Navbar";
+import CustomCursor from "./components/ui/CustomCursor";
+import BackToTop from "./components/ui/BackToTop";
+import Layout from "./components/Layout";
+import SystemLog from "./components/ui/SystemLog";
 
 // Sections
-import About from './components/sections/About';
-import Projects from './components/sections/Projects';
-import Services from './components/sections/Services';
-import Lab from './components/sections/Lab';
-import Contact from './components/sections/Contact';
-import ProjectDetail from './components/sections/ProjectDetail';
-import NotFound from './pages/NotFound';
+import About from "./components/sections/About";
+import Projects from "./components/sections/Projects";
+import Services from "./components/sections/Services";
+import Lab from "./components/sections/Lab";
+import Contact from "./components/sections/Contact";
+import NotFound from "./pages/NotFound";
 
+// Route-only section — code-split out of the main bundle since it's only
+// needed when visiting a project detail page (/work/:id).
+const ProjectDetail = lazy(() => import("./components/sections/ProjectDetail"));
 
 // ── Loading Fallback ──────────────────────────────────────────────────────────
 const LoadingFallback = () => (
   <div
     className="fixed inset-0 flex items-center justify-center z-50"
-    style={{ background: 'var(--color-void)' }}
+    style={{ background: "var(--color-void)" }}
   >
-    <p className="font-mono text-[10px] tracking-[0.4em] uppercase animate-pulse" style={{ color: 'rgba(240,240,238,0.15)' }}>
+    <p
+      className="font-mono text-[10px] tracking-[0.4em] uppercase animate-pulse"
+      style={{ color: "rgba(240,240,238,0.15)" }}
+    >
       Loading…
     </p>
   </div>
@@ -60,7 +65,7 @@ const LoadingFallback = () => (
 
 /**
  * ── Home Page (Sections Stack) ────────────────────────────────────────────────
- * All sections are rendered vertically. The 'Projects' section implements 
+ * All sections are rendered vertically. The 'Projects' section implements
  * a horizontal scroll pin using GSAP ScrollTrigger.
  */
 const Home = ({ lenisRef }) => {
@@ -75,7 +80,10 @@ const Home = ({ lenisRef }) => {
       if (el) {
         // Gentle delay to allow the new page to settle
         const tid = setTimeout(() => {
-          lenis.scrollTo(el, { duration: 1.5, easing: (t) => t === 1 ? 1 : 1 - Math.pow(2, -10 * t) });
+          lenis.scrollTo(el, {
+            duration: 1.5,
+            easing: (t) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t)),
+          });
           // Pure state cleanup
           window.history.replaceState({}, document.title);
         }, 100);
@@ -106,12 +114,12 @@ const App = () => {
   useGsapScroll(lenisRef);
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
   // Reset to top ONLY for project pages
   useEffect(() => {
-    if (location.pathname.startsWith('/work/')) {
+    if (location.pathname.startsWith("/work/")) {
       lenisRef.current?.scrollTo(0, { immediate: true });
     }
   }, [location.pathname, lenisRef]);
@@ -121,25 +129,32 @@ const App = () => {
       {/* ── Global Background Effects ─────────────────────────────────── */}
       <div
         className="fixed inset-0 z-[9999] pointer-events-none opacity-[0.03] animate-noise"
-        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")` }}
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+        }}
       />
 
       {/* Global Persistence Components */}
       <CustomCursor />
       <BackgroundCanvas />
-      <Navbar lenis={lenisRef.current} />
-      <BackToTop />
+      <Navbar lenisRef={lenisRef} />
+      <BackToTop lenisRef={lenisRef} />
       <SystemLog />
 
       {/* Page content with Route transitions */}
       <AnimatePresence mode="wait">
         <Layout key={location.pathname}>
           <main className="relative z-10 min-h-screen">
-            <Routes location={location} key={location.pathname}>
-              <Route path="/" element={<Home lenisRef={lenisRef} />} />
-              <Route path="/work/:id" element={<ProjectDetail isPage={true} />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <Suspense fallback={<LoadingFallback />}>
+              <Routes location={location} key={location.pathname}>
+                <Route path="/" element={<Home lenisRef={lenisRef} />} />
+                <Route
+                  path="/work/:id"
+                  element={<ProjectDetail isPage={true} />}
+                />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </main>
         </Layout>
       </AnimatePresence>
