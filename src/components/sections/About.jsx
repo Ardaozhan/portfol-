@@ -392,6 +392,11 @@ const Chapter = ({ chapter, skewX, velocity }) => {
 // ── About Section ─────────────────────────────────────────────────────────────
 const About = () => {
   const { skewX, velocity } = useScrollVelocity();
+  // Chapters already broadcast their theme into the store on enter (see
+  // Chapter's ScrollTrigger effect) — reuse that same signal to drive a
+  // progress rail instead of adding a second scroll listener.
+  const sceneTheme = useAppStore((s) => s.sceneTheme);
+  const activeIndex = CHAPTERS.findIndex((c) => c.theme === sceneTheme);
 
   return (
     <section
@@ -409,6 +414,50 @@ const About = () => {
           isFirst={i === 0}
         />
       ))}
+
+      {/* Chapter progress rail — zero-height sticky anchor so it doesn't add
+          extra scroll distance to the section; the accent-colored fill uses
+          a shared layoutId (same technique as Navbar's active-link dot) so it
+          physically slides/springs between ticks instead of just swapping
+          color, then scrolls away naturally once the section ends. */}
+      <div
+        className="hidden lg:block sticky top-0 h-0 pointer-events-none"
+        style={{ zIndex: CHAPTERS.length + 10 }}
+        aria-hidden="true"
+      >
+        <div className="absolute right-8 xl:right-12 top-1/2 -translate-y-1/2 flex flex-col items-end gap-4">
+          {CHAPTERS.map((chapter, i) => (
+            <div key={chapter.id} className="flex items-center gap-3">
+              <motion.span
+                className="font-mono text-[9px] uppercase tracking-[0.2em]"
+                animate={{
+                  color:
+                    i === activeIndex
+                      ? chapter.accent
+                      : "rgba(255,255,255,0.15)",
+                  scale: i === activeIndex ? 1.15 : 1,
+                }}
+                transition={{ duration: 0.4 }}
+              >
+                0{i + 1}
+              </motion.span>
+              <span
+                className="relative block w-5 h-[2px] rounded-full overflow-hidden"
+                style={{ background: "rgba(255,255,255,0.15)" }}
+              >
+                {i === activeIndex && (
+                  <motion.span
+                    layoutId="about-rail-active"
+                    className="absolute inset-0 rounded-full"
+                    style={{ background: chapter.accent }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
     </section>
   );
 };

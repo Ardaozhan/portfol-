@@ -1,8 +1,18 @@
 /**
  * Contact.jsx — İletişim bölümü (Grafik Tasarımcı odaklı)
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+
+// Live local time, always reflecting Istanbul regardless of the visitor's
+// own timezone — a small genuinely-live detail that fits the rest of the
+// site's "always technical, always live" readouts (System_Log, coordinates).
+const formatIstanbulTime = () =>
+  new Intl.DateTimeFormat("tr-TR", {
+    timeZone: "Europe/Istanbul",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date());
 
 const SOCIALS = [
   { label: "Behance", href: "#" },
@@ -86,6 +96,12 @@ const Contact = () => {
   });
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
+  const [localTime, setLocalTime] = useState(formatIstanbulTime);
+
+  useEffect(() => {
+    const id = setInterval(() => setLocalTime(formatIstanbulTime()), 30000);
+    return () => clearInterval(id);
+  }, []);
 
   const handleChange = useCallback(
     (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value })),
@@ -180,12 +196,42 @@ const Contact = () => {
                   >
                     {label}
                   </span>
-                  <span
-                    className="text-sm font-medium"
-                    style={{ color: "var(--color-chalk)" }}
-                  >
-                    {value}
-                  </span>
+                  {label === "Konum" ? (
+                    <span
+                      className="text-sm font-medium flex items-center gap-1.5"
+                      style={{ color: "var(--color-chalk)" }}
+                    >
+                      {value}
+                      <span
+                        className="relative inline-flex overflow-hidden align-middle"
+                        style={{ width: "3.4em", height: "1.3em" }}
+                      >
+                        <AnimatePresence mode="popLayout">
+                          <motion.span
+                            key={localTime}
+                            className="absolute inset-0 font-mono text-xs"
+                            style={{ color: "var(--color-lime)" }}
+                            initial={{ y: 10, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: -10, opacity: 0 }}
+                            transition={{
+                              duration: 0.35,
+                              ease: [0.22, 1, 0.36, 1],
+                            }}
+                          >
+                            {localTime}
+                          </motion.span>
+                        </AnimatePresence>
+                      </span>
+                    </span>
+                  ) : (
+                    <span
+                      className="text-sm font-medium"
+                      style={{ color: "var(--color-chalk)" }}
+                    >
+                      {value}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>

@@ -82,9 +82,19 @@ const ProjectCard = ({ project, index, onSelect }) => {
           }}
         >
           <span
-            className="font-mono text-[10px] tracking-[0.3em] uppercase block mb-2"
-            style={{ color: "rgba(232,232,232,0.25)" }}
+            className="font-mono text-[10px] tracking-[0.3em] uppercase flex items-center gap-2 mb-2"
+            style={{ color: project.color ?? "rgba(232,232,232,0.4)" }}
           >
+            <motion.span
+              className="inline-block w-1.5 h-1.5 rounded-full"
+              style={{ background: project.color ?? "currentColor" }}
+              animate={{ opacity: [1, 0.35, 1] }}
+              transition={{
+                duration: 2.2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
             0{index + 1} / {String(PROJECTS.length).padStart(2, "0")}
           </span>
 
@@ -92,7 +102,7 @@ const ProjectCard = ({ project, index, onSelect }) => {
             <motion.h3
               layoutId={`project-title-${project.id}`}
               className="text-2xl md:text-3xl font-black leading-tight tracking-tight"
-              style={{ color: "var(--color-highlight)" }}
+              style={{ color: "var(--color-chalk)" }}
               initial={{ y: "100%" }}
               whileInView={{ y: 0 }}
               viewport={{ once: true }}

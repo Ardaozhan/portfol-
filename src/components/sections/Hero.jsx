@@ -200,7 +200,10 @@ const Hero = () => {
         className="absolute top-1/2 right-10 -translate-y-1/2 pointer-events-none opacity-[0.02]"
         animate={{ rotate: 360 }}
         transition={{ duration: 100, repeat: Infinity, ease: "linear" }}
-        aria-hidden="true"
+
+        transition={{ duration: 100, repeat: Infinity, ease: "linear"
+        className="absolute top-1/2 right-10 -translate-y-1/2 pointer-events-none opacity-[0.02]"
+        animate={{ rotate: 360 }}        aria-hidden="true"
       >
         <div className="text-[40vw] font-black leading-none uppercase select-none">
           AR_D
